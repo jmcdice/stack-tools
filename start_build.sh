@@ -1,5 +1,6 @@
 #!/bin/bash
-# Start an automated stacki build
+# Start an automated stacki install. 
+# Make sure this is installed for HP hardware: https://pythonhosted.org/python-hpilo/index.html
 # Joey <joey.mcdonald@nokia.com>
 
 # Modify as needed for your env
