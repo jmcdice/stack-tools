@@ -24,6 +24,8 @@ function add_appliances() {
    echo -n "Adding additional appliance types: "
    /opt/stack/bin/stack add appliance compute membership=Compute node=backend
    /opt/stack/bin/stack add appliance vm-manager membership="VM Management Node" node=backend
+   /opt/stack/bin/stack set appliance attr compute attr=managed value=true
+   /opt/stack/bin/stack set appliance attr vm-manager attr=managed value=true
    echo "Ok"
 }
 

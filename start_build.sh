@@ -1,6 +1,7 @@
 #!/bin/bash
 # Start an automated stacki install. 
 # Make sure this is installed for HP hardware: https://pythonhosted.org/python-hpilo/index.html
+# 
 # Joey <joey.mcdonald@nokia.com>
 
 # Modify as needed for your env
@@ -139,15 +140,15 @@ function pxeboot() {
    echo "Ok"
 }
 
-# clean_ssh_known_hosts $fe_public_ip
-# repack_iso
-# for ilo in ${compute_ilos[@]}; do
-   # power_off $ilo
-# done
+clean_ssh_known_hosts $fe_public_ip
+repack_iso
+for ilo in ${compute_ilos[@]}; do
+   power_off $ilo
+done
 
-# iso_boot_frontend $fe_ilo
-# wait_for_ssh $fe_public_ip $cluster
-# add_stacki_pallet $fe_public_ip
+iso_boot_frontend $fe_ilo
+wait_for_ssh $fe_public_ip $cluster
+add_stacki_pallet $fe_public_ip
 run_fe_config $fe_public_ip
 
 # PXE boot computes
@@ -156,3 +157,4 @@ for ilo in ${compute_ilos[@]}; do
 done
 
 ## Do more stuff here.
+
