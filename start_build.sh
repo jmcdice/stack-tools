@@ -12,7 +12,7 @@ ilo_pass='password'
 fe_ilo='172.29.36.112'
 compute_ilos=( 172.29.36.113 172.29.36.115 172.29.36.116 172.29.36.107 )
 fe_public_ip='172.29.55.10'
-
+cwd=`pwd`
 
 function clean_ssh_known_hosts() {
 
@@ -31,6 +31,8 @@ function repack_iso() {
       -no-emul-boot -boot-load-size 6 -boot-info-table \
       -r -T -f -input-charset utf-8 -m initrd -m cb-fe -o /var/www/html/iso/stacki/$iso_file . &> /dev/null
    echo "Ok"
+
+   cd $cwd
 }
 
 function power_off() {
@@ -53,13 +55,11 @@ function iso_boot_frontend() {
 
    ip=$1
 
-   cd /export/ci/tools/ci/
-
    # Eject ISO if inserted.
-   ./hpilo_cli -l $ilo_user -p $ilo_pass $ip get_vm_status |grep image_inserted | grep -iq yes
+   /export/ci/tools/ci/hpilo_cli -l $ilo_user -p $ilo_pass $ip get_vm_status |grep image_inserted | grep -iq yes
    if [ $? -eq '0' ]; then
       echo -n "Ejecting a mounted ISO: "
-      ./hpilo_cli -l $ilo_user -p $ilo_pass $ip eject_virtual_media device=cdrom &> /dev/null
+      /export/ci/tools/ci/hpilo_cli -l $ilo_user -p $ilo_pass $ip eject_virtual_media device=cdrom &> /dev/null
       echo "Ok"
    fi
 
@@ -69,14 +69,14 @@ function iso_boot_frontend() {
    echo "Ok"
 
    echo -n "Inserting Virtual Media: "
-   ./hpilo_cli -l $ilo_user -p $ilo_pass $ip insert_virtual_media device=CDROM \
+   /export/ci/tools/ci/hpilo_cli -l $ilo_user -p $ilo_pass $ip insert_virtual_media device=CDROM \
       image_url=http://$acid_ip/iso/stacki/$iso_file &> /dev/null
    echo "Ok"
 
    echo -n "Setting boot priority: "
-   ./hpilo_cli -l $ilo_user -p $ilo_pass $ip set_vm_status device=cdrom boot_option=boot_once write_protect=True &> /dev/null
-   ./hpilo_cli -l $ilo_user -p $ilo_pass $ip set_one_time_boot device=cdrom &> /dev/null
-   ./hpilo_cli -l $ilo_user -p $ilo_pass $ip set_persistent_boot devices=CDROM,NETWORK,HDD,USB,FLOPPY &> /dev/null
+   /export/ci/tools/ci/hpilo_cli -l $ilo_user -p $ilo_pass $ip set_vm_status device=cdrom boot_option=boot_once write_protect=True &> /dev/null
+   /export/ci/tools/ci/hpilo_cli -l $ilo_user -p $ilo_pass $ip set_one_time_boot device=cdrom &> /dev/null
+   /export/ci/tools/ci/hpilo_cli -l $ilo_user -p $ilo_pass $ip set_persistent_boot devices=CDROM,NETWORK,HDD,USB,FLOPPY &> /dev/null
    sleep 10
    echo "Ok"
 
@@ -91,8 +91,8 @@ function wait_for_ssh() {
    fe=$1
    cluster=$2
 
+   start=$(date +"%s")
    echo -n "Waiting for $cluster frontend to install: "
-
    ssh="ssh -q -o UserKnownHostsFile=/dev/null -o ConnectTimeout=10 $fe 'hostname' 2>&1 | grep -q $cluster"
    $ssh
    while test $? -gt 0; do
@@ -101,7 +101,10 @@ function wait_for_ssh() {
    done
    clean_ssh_known_hosts $fe
 
-   echo "Ok"
+   end=$(date +"%s")
+   seconds=$(($end - $start));
+   min=$(($seconds / 60))
+   echo "Ok (took $min minutes)"
 }
 
 function add_stacki_pallet() {
@@ -125,16 +128,9 @@ function run_fe_config() {
 function pxeboot() {
 
    compute=$1
-   cd /export/ci/tools/ci/
 
-   echo -n "Powering down $compute: "
-   /usr/bin/ipmitool -I lanplus -U $ilo_user -P $ilo_pass -H $compute chassis power off &> /dev/null
-   sleep 10
-   echo "Ok"
-
-   compute=$1
    echo -n "Setting pxe boot for $compute: "
-   ./hpilo_cli -l $ilo_user -p $ilo_pass $compute set_persistent_boot devices=NETWORK,HDD,USB,FLOPPY &> /dev/null
+   /export/ci/tools/ci/hpilo_cli -l $ilo_user -p $ilo_pass $compute set_persistent_boot devices=NETWORK,HDD,USB,FLOPPY &> /dev/null
    sleep 5
    echo "Ok"
 
@@ -143,15 +139,15 @@ function pxeboot() {
    echo "Ok"
 }
 
-clean_ssh_known_hosts $fe_public_ip
-repack_iso
-for ilo in ${compute_ilos[@]}; do
-   power_off $ilo
-done
+# clean_ssh_known_hosts $fe_public_ip
+# repack_iso
+# for ilo in ${compute_ilos[@]}; do
+   # power_off $ilo
+# done
 
-iso_boot_frontend $fe_ilo
-wait_for_ssh $fe_public_ip $cluster
-add_stacki_pallet $fe_public_ip
+# iso_boot_frontend $fe_ilo
+# wait_for_ssh $fe_public_ip $cluster
+# add_stacki_pallet $fe_public_ip
 run_fe_config $fe_public_ip
 
 # PXE boot computes
