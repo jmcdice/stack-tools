@@ -38,7 +38,15 @@ function power_off() {
    cpt=$1
 
    echo -n "Powering down $cpt: "
-   /usr/bin/ipmitool -I lanplus -U $ilo_user -P $ilo_pass -H $cpt chassis power off 2>&1 > /dev/null
+   sleep 3
+   ipmit="/usr/bin/ipmitool -I lanplus -U $ilo_user -P $ilo_pass -H $cpt chassis power off"
+   $ipmit &> /dev/null
+   while test $? -gt 0; do
+      sleep 5
+      $ipmit &> /dev/null
+   done
+
+
    echo "Ok"
 }
 
@@ -75,6 +83,7 @@ function iso_boot_frontend() {
 
    echo -n "Powering up $ip: "
    /usr/bin/ipmitool -I lanplus -U $ilo_user -P $ilo_pass -H $ip chassis power on &> /dev/null
+   sleep 3
    echo "Ok"
 }
 
@@ -85,12 +94,13 @@ function wait_for_ssh() {
 
    echo -n "Waiting for $cluster frontend to install: "
 
-   ssh="ssh -q -o UserKnownHostsFile=/dev/null -o ConnectTimeout=10 $fe 'hostname' | grep -q $cluster"
+   ssh="ssh -q -o UserKnownHostsFile=/dev/null -o ConnectTimeout=10 $fe 'hostname' 2>&1 | grep -q $cluster"
    $ssh
    while test $? -gt 0; do
       sleep 5
       $ssh
    done
+   clean_ssh_known_hosts $fe
 
    echo "Ok"
 }
@@ -102,6 +112,7 @@ function add_stacki_pallet() {
    echo -n "Adding Stacki Pallet: "
    scp -q /var/www/html/iso/stacki/stacki-3.1-7.x.x86_64.disk1.iso $fe:
    ssh $fe 'stack add pallet stacki-3.1-7.x.x86_64.disk1.iso' &> /dev/null
+   sleep 10
    echo "Ok"
 }
 
@@ -133,8 +144,8 @@ function pxeboot() {
    echo "Ok"
 }
 
-#clean_ssh_known_hosts $fe_public_ip
-#repack_iso
+clean_ssh_known_hosts $fe_public_ip
+repack_iso
 for ilo in ${compute_ilos[@]}; do
    power_off $ilo
 done
@@ -142,7 +153,6 @@ iso_boot_frontend $fe_ilo
 wait_for_ssh $fe_public_ip $cluster
 add_stacki_pallet $fe_public_ip
 run_fe_config $fe_public_ip
-
 # PXE boot computes
 for ilo in ${compute_ilos[@]}; do
    pxeboot $ilo

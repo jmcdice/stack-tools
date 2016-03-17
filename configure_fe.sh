@@ -29,7 +29,7 @@ function add_appliances() {
 
 function add_public_network() {
 
-   echo "Creating public network: "
+   echo -n "Creating public network: "
    /opt/stack/bin/stack add network public \
         address=172.29.55.0        \
         mask=255.255.255.0                \
@@ -42,7 +42,7 @@ function add_public_network() {
 
 function add_computes() {
 
-   echo "Adding baremetal computes: "
+   echo -n "Adding baremetal computes: "
 cat > /root/computes.csv<< 'EOF'
 NAME,INTERFACE HOSTNAME,DEFAULT,APPLIANCE,RACK,RANK,IP,MAC,INTERFACE,NETWORK,CHANNEL,OPTIONS,VLAN
 vm-manager-0-0,,,vm-manager,1,1,10.1.255.254,10:1f:74:35:86:e8,enp2s0f0,private,,,
@@ -56,7 +56,7 @@ EOF
    stack load hostfile file=computes.csv &> /dev/null
    echo "Ok"
 
-   echo "Setting compute Bootaction to install: "
+   echo -n "Setting compute Bootaction to install: "
    stack set host boot compute vm-manager action=install
    echo "Ok"
 }
