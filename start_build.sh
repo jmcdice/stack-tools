@@ -46,7 +46,6 @@ function power_off() {
       $ipmit &> /dev/null
    done
 
-
    echo "Ok"
 }
 
@@ -129,18 +128,18 @@ function pxeboot() {
    cd /export/ci/tools/ci/
 
    echo -n "Powering down $compute: "
-   /usr/bin/ipmitool -I lanplus -U $ilo_user -P $ilo_pass -H $compute chassis power off 2>&1 > /dev/null
+   /usr/bin/ipmitool -I lanplus -U $ilo_user -P $ilo_pass -H $compute chassis power off &> /dev/null
    sleep 10
    echo "Ok"
 
    compute=$1
    echo -n "Setting pxe boot for $compute: "
-   ./hpilo_cli -l $ilo_user -p $ilo_pass $compute set_persistent_boot devices=NETWORK,HDD,USB,FLOPPY  2>&1 > /dev/null
+   ./hpilo_cli -l $ilo_user -p $ilo_pass $compute set_persistent_boot devices=NETWORK,HDD,USB,FLOPPY &> /dev/null
    sleep 5
    echo "Ok"
 
    echo -n "Powering up $compute: "
-   /usr/bin/ipmitool -I lanplus -U $ilo_user -P $ilo_pass -H $compute chassis power on  2>&1 > /dev/null
+   /usr/bin/ipmitool -I lanplus -U $ilo_user -P $ilo_pass -H $compute chassis power on &> /dev/null
    echo "Ok"
 }
 
@@ -149,10 +148,12 @@ repack_iso
 for ilo in ${compute_ilos[@]}; do
    power_off $ilo
 done
+
 iso_boot_frontend $fe_ilo
 wait_for_ssh $fe_public_ip $cluster
 add_stacki_pallet $fe_public_ip
 run_fe_config $fe_public_ip
+
 # PXE boot computes
 for ilo in ${compute_ilos[@]}; do
    pxeboot $ilo
