@@ -140,6 +140,8 @@ function pxeboot() {
    echo "Ok"
 }
 
+install_start=$(date +"%s")
+
 clean_ssh_known_hosts $fe_public_ip
 repack_iso
 for ilo in ${compute_ilos[@]}; do
@@ -156,5 +158,13 @@ for ilo in ${compute_ilos[@]}; do
    pxeboot $ilo
 done
 
+# Need a function here which knows when all the computes have
+# come online.
+# wait_for_computes
+
 ## Do more stuff here.
+install_end=$(date +"%s")
+install_seconds=$(($install_end - $install_start));
+install_min=$(($install_seconds / 60))
+echo "Cluster deployment complete, total time, $install_min minutes."
 

@@ -1,0 +1,38 @@
+<?xml version="1.0" standalone="no"?>
+
+<kickstart>
+
+
+<description>
+Append an ssh key to the FE keys.
+</description>
+
+<si_copyright>
+(c) 2016 - Joey INC.
+All rights reserved. joey(c)
+</si_copyright>
+
+<package>lsof</package>
+<package>vim-enhanced</package>
+<package>tcpdump</package>
+<package>nmap</package>
+<package>mlocate</package>
+
+<post>
+
+mkdir -p /root/.ssh/
+touch /root/.ssh/authorized_keys
+
+<file name="/root/.ssh/authorized_keys" mode="append">
+ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEApCOHZpQ+HWnC7CiJeI2Wht4dyu5V6BivpuNYJvfz/X3bf+3aziGgeTIgVsETLTYp+Hz0wUFOTr335kOSEKJNxNMHZ4eXScX7xeyPOeAmFMLwEcTYIQOTxmyAkkslirI1Zj9bTqgoTLpuGHUvmh7XlNPVHwnVuRKEqgjsyhqp+UIiugeTm1QvbDvh+f/shEhhufB23oM1FQNRIPV12HvxZPwXAGtV/rp8n5ahLRESizWJCKlQJz4zmUNO60IGTr+2p4h9FQ5IgFxjwL+ZXtXSRTsSCG5qrlo8Xnwu4ZjZcDMDWzqGEH7gxJhw1wVyWLzuKeYy7+4u66bekXgd5KF/mQ== root@install.cloud-band.com
+</file>
+
+chmod 400 /root/.ssh/authorized_keys
+
+</post>
+
+
+</kickstart>
+
+
+
